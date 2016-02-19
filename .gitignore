@@ -27,6 +27,11 @@
 *.i*86
 *.x86_64
 *.hex
+*_petsc_*
 
 # Debug files
 *.dSYM/
+
+# Garbage
+*~
+
