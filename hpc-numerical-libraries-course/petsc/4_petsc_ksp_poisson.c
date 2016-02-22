@@ -250,6 +250,7 @@ PetscErrorCode AssemblyRhs(DM dm, Vec* b)
   DMDALocalInfo  info;
   PetscErrorCode ierr;
   PetscScalar hx,hy;
+  PetscInt i,j;  
   
   ierr  = DMDAGetLocalInfo(dm,&info); CHKERRQ(ierr);
 
@@ -257,8 +258,8 @@ PetscErrorCode AssemblyRhs(DM dm, Vec* b)
   hy    = 1.0/(PetscReal)(info.my-1);
 
   /* bdc for b */
-  for (int j=info.ys; j<info.ys+info.ym; j++) {
-    for (int i=info.xs; i<info.xs+info.xm; i++) {     
+  for (j=info.ys; j<info.ys+info.ym; j++) {
+    for (i=info.xs; i<info.xs+info.xm; i++) {     
       /* boundary points */
       if (i == 0 || j == 0 || i == info.mx-1 || j == info.my-1) {
         VecSetValue(*b, j+info.my*i, 0., INSERT_VALUES);
@@ -285,14 +286,15 @@ PetscErrorCode ComputeManufacturedSolution(DM dm, Vec* sol)
   DMDALocalInfo  info;
   PetscErrorCode ierr;
   PetscScalar hx,hy;
-  
+  PetscInt i,j;  
+
   ierr  = DMDAGetLocalInfo(dm,&info); CHKERRQ(ierr);
 
   hx    = 1.0/(PetscReal)(info.mx-1);
   hy    = 1.0/(PetscReal)(info.my-1);
 
-  for (int j=info.ys; j<info.ys+info.ym; j++) {
-    for (int i=info.xs; i<info.xs+info.xm; i++) {     
+  for (j=info.ys; j<info.ys+info.ym; j++) {
+    for (i=info.xs; i<info.xs+info.xm; i++) {     
         PetscScalar f = 16.*(hx*i)*(hx*i - 1.)*(hy*j)*(hy*j - 1.);
         VecSetValue(*sol, j+info.my*i, f, INSERT_VALUES);
     }
