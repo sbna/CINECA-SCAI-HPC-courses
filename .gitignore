@@ -39,3 +39,5 @@
 *.vtk
 *.vts
 
+# qsub files
+*.err
