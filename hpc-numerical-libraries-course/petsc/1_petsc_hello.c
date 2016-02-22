@@ -14,7 +14,7 @@ static const char help[] = "Petsc Hello World.\n\n";
 
 #undef __FUNCT__
 #define __FUNCT__ "main"
-int main(int argc,char **args)
+int main(int argc,char **argv)
 {
 
    PetscErrorCode ierr;
@@ -29,7 +29,7 @@ int main(int argc,char **args)
                   runtime.  The user can use the "help" variable place
                   additional help messages in this printout.
    */
-   PetscInitialize(&argc,&args,(char *)0,help);
+   PetscInitialize(&argc,&argv,(char *)0,help);
 
    /*
      The following MPI calls return the number of processes

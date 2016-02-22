@@ -2,7 +2,7 @@
  * @file 1_petsc_mat.c
  * @author Simone Bnà
  * @date 19 Feb 2016
- * @brief File containing the basic example of petsc usage.
+ * @brief File containing the basic example of petsc mat usage.
  * source loadPetscEnv.sh 
  * make
  * qsub petscSubmissionScript
@@ -10,11 +10,11 @@
 
 static const char help[] = "Petsc mat example.\n\n";
 
-#include "petscksp.h"
+#include <petscmat.h>
 
 #undef __FUNCT__
 #define __FUNCT__ "main"
-int main(int argc,char **args)
+int main(int argc,char **argv)
 {
 
    PetscErrorCode ierr;
@@ -26,7 +26,7 @@ int main(int argc,char **args)
    short unsigned int use_matrix_one_shot_creation = 1;
 
    /* Initialize the Petsc environment */
-   PetscInitialize(&argc,&args,(char*)0,help);
+   PetscInitialize(&argc,&argv,(char*)0,help);
 
    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
    MPI_Comm_size(PETSC_COMM_WORLD, &nprocs);
@@ -113,5 +113,5 @@ int main(int argc,char **args)
    MatDestroy(&A);
    PetscFinalize();
 
-   return 0;
+   PetscFunctionReturn(0);
 }
