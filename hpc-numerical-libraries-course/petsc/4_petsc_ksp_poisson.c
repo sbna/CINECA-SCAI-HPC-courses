@@ -71,13 +71,11 @@ int main(int argc,char **argv)
   DMCreateMatrix(da, &A);
 
   /*
-    Assemble the matrix A.
+    Compute the matrix and right-hand-side vector that define
+    the linear system, Ax = b.
   */
   ierr = AssemblyMatrix(da, &A);
 
-  /*   
-    Assembly the rhs b.
-  */
   ierr = AssemblyRhs(da, &b);CHKERRQ(ierr);
 
   /*   
