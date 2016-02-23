@@ -1,5 +1,5 @@
-PETSC_DIR  = /home/ubuntu/Software/petsc
-PETSC_ARCH = arch-linux2-cxx-opt
+#PETSC_DIR  = /home/ubuntu/Software/petsc
+#PETSC_ARCH = arch-linux2-cxx-opt
 
 ALL: 1_petsc_hello 2_petsc_vec 3_petsc_mat 4_petsc_ksp_poisson 5_petsc_snes_poisson
 
@@ -8,8 +8,10 @@ CPPFLAGS =
 
 CLEANFILES = 1_petsc_hello 2_petsc_vec 3_petsc_mat 4_petsc_ksp_poisson 5_petsc_snes_poisson
 
-include ${PETSC_DIR}/lib/petsc/conf/variables
-include ${PETSC_DIR}/lib/petsc/conf/rules
+#include ${PETSC_HOME}/conf/variables
+#include ${PETSC_HOME}/conf/rules
+include ${PETSC_HOME}/lib/petsc/conf/variables
+include ${PETSC_HOME}/lib/petsc/conf/rules
 
 1_petsc_hello: 1_petsc_hello.o  chkopts
 	@echo "--> Linking the executable...  <--"
