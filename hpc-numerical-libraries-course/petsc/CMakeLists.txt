@@ -2,6 +2,20 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(PETSC_TUTORIAL_EXAMPLES)
 
+#############################################################################################
+### Configuration project files
+#############################################################################################
+# configure the source env and qsub script
+CONFIGURE_FILE(
+  "${PROJECT_SOURCE_DIR}/petsc_load_env.sh"
+  "${PROJECT_BINARY_DIR}/petsc_load_env.sh" @ONLY IMMEDIATE
+)
+
+CONFIGURE_FILE(
+  "${PROJECT_SOURCE_DIR}/petsc_qsub_script.sh.in"
+  "${PROJECT_BINARY_DIR}/petsc_qsub_script.sh" @ONLY IMMEDIATE
+)
+
 # Build the executables
 ADD_EXECUTABLE(1_petsc_hello        ${PROJECT_SOURCE_DIR}/1_petsc_hello.c)
 ADD_EXECUTABLE(2_petsc_vec          ${PROJECT_SOURCE_DIR}/2_petsc_vec.c)
