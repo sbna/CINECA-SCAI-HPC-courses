@@ -1,14 +1,12 @@
 PETSC_DIR  = /home/ubuntu/Software/petsc
 PETSC_ARCH = arch-linux2-cxx-opt
 
-ALL: 1_petsc_hello 2_petsc_vec 3_petsc_mat 4_petsc_ksp_poisson
-#ALL: 3_petsc_mat
+ALL: 1_petsc_hello 2_petsc_vec 3_petsc_mat 4_petsc_ksp_poisson 5_petsc_snes_poisson
 
-#CFLAGS   = -g -O2
 CFLAGS = -g -O2
 CPPFLAGS = 
 
-CLEANFILES = 1_petsc_hello 2_petsc_vec 3_petsc_mat 4_petsc_ksp_poisson
+CLEANFILES = 1_petsc_hello 2_petsc_vec 3_petsc_mat 4_petsc_ksp_poisson 5_petsc_snes_poisson
 
 include ${PETSC_DIR}/lib/petsc/conf/variables
 include ${PETSC_DIR}/lib/petsc/conf/rules
@@ -35,4 +33,10 @@ include ${PETSC_DIR}/lib/petsc/conf/rules
 	@echo "--> Linking the executable...  <--"
 	-${CLINKER} -o 4_petsc_ksp_poisson 4_petsc_ksp_poisson.o  ${PETSC_KSP_LIB}
 	${RM} 4_petsc_ksp_poisson.o
+	@echo "-->...done.  <--"
+
+5_petsc_snes_poisson: 5_petsc_snes_poisson.o  chkopts
+	@echo "--> Linking the executable...  <--"
+	-${CLINKER} -o 5_petsc_snes_poisson 5_petsc_snes_poisson.o  ${PETSC_KSP_LIB}
+	${RM} 5_petsc_snes_poisson.o
 	@echo "-->...done.  <--"
