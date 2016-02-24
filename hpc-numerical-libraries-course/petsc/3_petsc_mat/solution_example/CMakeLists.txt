@@ -1,0 +1,15 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+PROJECT(PETSC_TUTORIAL_SOLUTION_EXAMPLE_3)
+
+# configure the qsub script
+CONFIGURE_FILE(
+  "${PROJECT_SOURCE_DIR}/petsc_qsub_script.sh.in"
+  "${PROJECT_BINARY_DIR}/petsc_qsub_script.sh" @ONLY IMMEDIATE
+)
+
+# Build the executable
+ADD_EXECUTABLE(3_petsc_mat          ${PROJECT_SOURCE_DIR}/3_petsc_mat.c)
+
+# Link the executable to the petsc and mpi libs
+TARGET_LINK_LIBRARIES(3_petsc_mat          ${PETSC_LIBRARIES} ${MPI_EXTRA_LIBRARY})
