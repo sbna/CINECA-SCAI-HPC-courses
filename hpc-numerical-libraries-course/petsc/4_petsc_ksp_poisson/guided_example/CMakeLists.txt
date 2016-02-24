@@ -9,8 +9,8 @@ CONFIGURE_FILE(
 )
 
 # Build the executable
-ADD_EXECUTABLE(4_petsc_ksp_poisson  ${PROJECT_SOURCE_DIR}/4_petsc_ksp_poisson.c)
+ADD_EXECUTABLE(petsc_ksp_poisson  ${PROJECT_SOURCE_DIR}/4_petsc_ksp_poisson.c)
 
 # Link the executable to the petsc and mpi libs
-TARGET_LINK_LIBRARIES(4_petsc_ksp_poisson  ${PETSC_LIBRARIES} ${MPI_EXTRA_LIBRARY})
+TARGET_LINK_LIBRARIES(petsc_ksp_poisson  ${PETSC_LIBRARIES} ${MPI_EXTRA_LIBRARY})
 
