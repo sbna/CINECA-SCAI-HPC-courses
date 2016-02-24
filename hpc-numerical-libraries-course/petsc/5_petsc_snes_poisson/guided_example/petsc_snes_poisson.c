@@ -1,65 +1,5 @@
-/**
- * @file 5_petsc_snes_poisson.c
- * @author Simone Bnà
- * @date 19 Feb 2016
- * @brief File containing the example of the solution in parallel 
- * of a Poisson problem using SNES and DMDA.
- * source loadPetscEnv.sh 
- * make
- * qsub petscSubmissionScript
- */
-
 static const char help[] = "-Laplacian u = b as a nonlinear problem.\n\n";
 
-/*
-
-    The linear and nonlinear versions of these should give almost identical results on this problem
-
-    Richardson
-      Nonlinear:
-        -snes_rtol 1.e-12 -snes_monitor -snes_type nrichardson -snes_linesearch_monitor
-
-      Linear:
-        -snes_rtol 1.e-12 -snes_monitor -ksp_rtol 1.e-12  -ksp_monitor -ksp_type richardson -pc_type none -ksp_richardson_self_scale -info
-
-    GMRES
-      Nonlinear:
-       -snes_rtol 1.e-12 -snes_monitor  -snes_type ngmres
-
-      Linear:
-       -snes_rtol 1.e-12 -snes_monitor  -ksp_type gmres -ksp_monitor -ksp_rtol 1.e-12 -pc_type none
-
-    CG
-       Nonlinear:
-            -snes_rtol 1.e-12 -snes_monitor  -snes_type ncg -snes_linesearch_monitor
-
-       Linear:
-             -snes_rtol 1.e-12 -snes_monitor  -ksp_type cg -ksp_monitor -ksp_rtol 1.e-12 -pc_type none
-
-    Multigrid
-       Linear:
-          1 level:
-            -snes_rtol 1.e-12 -snes_monitor  -pc_type mg -mg_levels_ksp_type richardson -mg_levels_pc_type none -mg_levels_ksp_monitor
-            -mg_levels_ksp_richardson_self_scale -ksp_type richardson -ksp_monitor -ksp_rtol 1.e-12  -ksp_monitor_true_residual
-
-          n levels:
-            -da_refine n
-
-       Nonlinear:
-         1 level:
-           -snes_rtol 1.e-12 -snes_monitor  -snes_type fas -fas_levels_snes_monitor
-
-          n levels:
-            -da_refine n  -fas_coarse_snes_type newtonls -fas_coarse_pc_type lu -fas_coarse_ksp_type preonly
-
-*/
-
-
-
-/*
-   Include "petscdmda.h" so that we can use distributed arrays (DMDAs).
-   Include "petscsnes.h" so that we can use SNES solvers.  Note that this
-*/
 #include <petscdm.h>
 #include <petscdmda.h>
 #include <petscsnes.h>
@@ -75,73 +15,34 @@ extern PetscErrorCode MyComputeJacobian(SNES,Vec,Mat,Mat,void*);
 #define __FUNCT__ "main"
 int main(int argc,char **argv)
 {
-  SNES           snes;        /* nonlinear solver */
-  Vec            x,b;         /* solution vector */
-  PetscInt       its;         /* iterations for convergence */
-  PetscErrorCode ierr;
-  DM             da;
-  PetscViewer    viewer;
-
   /*
     Initialize program
   */
   PetscInitialize(&argc,&argv,(char*)0,help);
 
-  /*
-    Create distributed array (DMDA) to manage parallel grid and vectors
-  */
-  ierr = DMDACreate2d(PETSC_COMM_WORLD, DM_BOUNDARY_NONE, DM_BOUNDARY_NONE,\
-                      DMDA_STENCIL_STAR,-4,-4,PETSC_DECIDE,PETSC_DECIDE,1,1,\
-                      NULL,NULL,&da);CHKERRQ(ierr);
-  ierr = DMDASetUniformCoordinates(da, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0);CHKERRQ(ierr);
-
-  /*
-    Extract global vectors from DMDA; then duplicate for remaining
-    vectors that are the same types
-  */
-  ierr = DMCreateGlobalVector(da,&x);CHKERRQ(ierr);
-  ierr = DMCreateGlobalVector(da,&b);CHKERRQ(ierr);
-  ierr = VecSet(b,0.);CHKERRQ(ierr);
-
   /* 
-    Create nonlinear solver context (mesh, compute rhs and jacobian functions)
-  */
-  ierr = SNESCreate(PETSC_COMM_WORLD,&snes);CHKERRQ(ierr);
+    Write a PETSc program that solve in parallel the following PDE:
+      
+        -nabla^2 u = -32*(x*(x-1) + y*(y-1)) in a box domain [0,1][0,1]
+    
+    with the following boundary conditions
+      
+        u = 0 in x=0, x=1, y=0 and y=1    
 
-  ierr = SNESSetDM(snes,da);CHKERRQ(ierr);
-  ierr = SNESSetFunction(snes,NULL,MyComputeFunction,NULL);CHKERRQ(ierr);
-  ierr = SNESSetJacobian(snes,NULL,NULL,MyComputeJacobian,NULL);CHKERRQ(ierr);
+    The solution is:
+      
+        u = 16 * x * (x - 1) * y * (y - 1) 
 
-  /*
-    Customize nonlinear solver; set runtime options
+    Use a distributed array (DMDA) to manage the parallel structured mesh 
+    (with uniform coordinates) and vectors.
+    Use the SNESSetFunction and SNESSetJacobian together with 
+    FormMatrix, MyComputeFunction and MyComputeJacobian 
+    to evaluate the jacobian J and the non linear function F(x) 
+    in a SNES context.
+    Solve the problem with a SNES object.
   */
-  ierr = SNESSetFromOptions(snes);CHKERRQ(ierr);
 
-  /*
-    Solve nonlinear system
-  */
-  ierr = SNESSolve(snes,b,x);CHKERRQ(ierr);
-  ierr = SNESGetIterationNumber(snes,&its);CHKERRQ(ierr);
-
-  /*
-    Print the mesh and solution in vtk format
-  */
-  PetscViewerASCIIOpen(PETSC_COMM_WORLD, "output_2.vts", &viewer);
-  PetscViewerSetFormat(viewer, PETSC_VIEWER_ASCII_VTK);
-  ierr= DMView(da,viewer);CHKERRQ(ierr);
-  ierr= VecView(x,viewer);CHKERRQ(ierr);
-
-  /*
-     Free work space.  All PETSc objects should be destroyed when they
-     are no longer needed.
-  
-  */
-  ierr = VecDestroy(&x);CHKERRQ(ierr);
-  ierr = VecDestroy(&b);CHKERRQ(ierr);
-  ierr = SNESDestroy(&snes);CHKERRQ(ierr);
-  ierr = DMDestroy(&da);CHKERRQ(ierr);
-  ierr = PetscViewerDestroy(&viewer);CHKERRQ(ierr);
-  ierr = PetscFinalize();
+  PetscFinalize();
   
   PetscFunctionReturn(0);
 }

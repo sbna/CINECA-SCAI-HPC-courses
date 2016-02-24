@@ -1,170 +1,50 @@
-/**
- * @file 1_petsc_hello.c
- * @author Simone Bnà
- * @date 19 Feb 2016
- * @brief File containing the example of the solution in parallel 
- * of a Poisson problem using KSP and DMDA.
- * source loadPetscEnv.sh 
- * make
- * qsub petscSubmissionScript
- */
-
 static const char help[] = "Solution of -Laplacian u = b using KSP and DMDA.\n\n";
 
 #include <petscdm.h>
 #include <petscdmda.h>
 #include <petscksp.h>  
 
-
 PetscErrorCode ComputeManufacturedSolution(DM dm, Vec* sol); 
 PetscErrorCode AssemblyRhs(DM dm, Vec* b); 
 PetscErrorCode AssemblyMatrix(DM dm, Mat* A); 
-
 
 #undef __FUNCT__
 #define __FUNCT__ "main"
 int main(int argc,char **argv)
 {
-  Vec            x,b,sol;         /* solution vectors */
-  Mat            A;               /* linear operator */
-  KSP            solver;
-  DM             da;              /* DMDA object containing the structured mesh */
-  PetscViewer    viewer; 
-  PetscReal norm_sol, norm_diff;
-  PetscErrorCode ierr;
-
   /* 
     Initialize program
   */
-
   PetscInitialize(&argc,&argv,(char*)0,help);
 
   /* 
-     -----------------------------------------------
-       Mesh, matrix and rhs creation
-     ----------------------------------------------- 
+    Write a PETSc program that solve in parallel the following PDE:
+      
+        -nabla^2 u = -32*(x*(x-1) + y*(y-1)) in a box domain [0,1][0,1]
+    
+    with the following boundary conditions
+      
+        u = 0 in x=0, x=1, y=0 and y=1    
+
+    The solution is:
+      
+        u = 16 * x * (x - 1) * y * (y - 1) 
+
+    Use a distributed array (DMDA) to manage the parallel structured mesh 
+    (with uniform coordinates) and vectors.
+    Use the AssemblyMatrix and Assembly Rhs functions to create 
+    the linear operator A and the rhs b of the linear system A x = b.
+    Solve the problem with a KSP object (default one is 
+    GMRES preconditioned by ILU (Block-Jacobi in parallel)).
+    Check if the numerical solution is close in l2norm to the 
+    the analytical solution (Use the ComputeManufacturedSolution).
   */
 
-  /* 
-    Create a distributed array (DMDA) to manage the parallel structured mesh and vectors.
-    The mesh is a 2D regular grid in a box domain [0,1][0,1]. 
-    The default case is 4 nodes in x and y direction
-    We use a star stencil for the finite difference discretization of the Laplacian operator. 
-  */
-  ierr = DMDACreate2d(PETSC_COMM_WORLD, DM_BOUNDARY_NONE,  \
-                      DM_BOUNDARY_NONE,DMDA_STENCIL_STAR,-4,-4,PETSC_DECIDE,PETSC_DECIDE,  \
-                      1,1,NULL,NULL,&da);CHKERRQ(ierr); 
-  ierr = DMDASetUniformCoordinates(da, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0);CHKERRQ(ierr);
-
-  /* 
-     Extract global vectors from DMDA, one for holding the rhs, one for the solution 
-     and one for the manufactured solution; then duplicate for remaining
-     vectors that are the same types
-  */
-  ierr = DMCreateGlobalVector(da,&x);CHKERRQ(ierr);
-  ierr = VecDuplicate(x, &sol);CHKERRQ(ierr);
-  ierr = VecDuplicate(x, &b);CHKERRQ(ierr);
-
-  /* 
-    Create the matrix corresponding to the DMDA object.
-  */
-  DMCreateMatrix(da, &A);
-
-  /*
-    Compute the matrix and right-hand-side vector that define
-    the linear system, Ax = b.
-  */
-  ierr = AssemblyMatrix(da, &A);
-
-  ierr = AssemblyRhs(da, &b);CHKERRQ(ierr);
-
-  /*   
-    Set to 0 the solution vector (our initial guess).
-  */
-  ierr = VecSet(x,0.);CHKERRQ(ierr);
-
-
-  /* 
-     -----------------------------------------------
-       solver section
-     ----------------------------------------------- 
-  */
-
-   /*
-      Create linear solver context
-   */
-   ierr = KSPCreate(PETSC_COMM_WORLD, &solver);CHKERRQ(ierr);
-
-   /*
-      Set the laplacian operator. Here the matrix that defines the linear system
-      also serves as the preconditioning matrix.
-   */
-   ierr = KSPSetOperators(solver, A, A);CHKERRQ(ierr);
-
-   /*
-     Set runtime options, e.g.,
-     -ksp_type <type> -pc_type <type> -ksp_monitor -ksp_rtol <rtol>
-     These options will override those specified above as long as
-     KSPSetFromOptions() is called _after_ any other customization
-     routines.
-   */
-   ierr = KSPSetFromOptions(solver);CHKERRQ(ierr);
-
-   /* 
-     Solve the linear system
-   */
-   ierr = KSPSolve(solver,b,x);CHKERRQ(ierr);
-
-
-  /* 
-     -----------------------------------------------
-       postprocessing section
-     ----------------------------------------------- 
-  */
-   
-  /*   
-    Compute the manufactured solution.
-  */
-  ierr = ComputeManufacturedSolution(da, &sol);CHKERRQ(ierr);
-
-  /* 
-    Compute the relative error of the numerical solution 
-    compared to the manufactured one and print it to the standard output.
-  */
-  VecNorm(sol,NORM_2,&norm_sol);
-  VecAXPY(sol,-1.0,x);
-  VecNorm(sol,NORM_2,&norm_diff);
-  PetscPrintf(PETSC_COMM_WORLD, "l2 norm of the error: %g \n", (double)norm_diff/(double)norm_sol);
-
-  /* 
-    Print the solution and rhs in vtk format.
-  */
-  PetscViewerASCIIOpen(PETSC_COMM_WORLD, "output.vts", &viewer);
-  PetscViewerSetFormat(viewer, PETSC_VIEWER_ASCII_VTK);
-  ierr= DMView(da,viewer);CHKERRQ(ierr);
-  ierr= VecView(x,viewer);CHKERRQ(ierr);
-  ierr= VecView(b,viewer);CHKERRQ(ierr);
-  /* 
-    ierr = MatView(A, PETSC_VIEWER_STDOUT_WORLD);
-    ierr = VecView(b, PETSC_VIEWER_STDOUT_WORLD);
-    ierr = VecView(x, PETSC_VIEWER_STDOUT_WORLD);
-  */
-
-  /*
-    Free work space.  All PETSc objects should be destroyed when they
-    are no longer needed.
-  */
-  ierr = DMDestroy(&da);CHKERRQ(ierr);
-  ierr = VecDestroy(&x);CHKERRQ(ierr);
-  ierr = VecDestroy(&b);CHKERRQ(ierr);
-  ierr = MatDestroy(&A);CHKERRQ(ierr);
-  ierr = KSPDestroy(&solver);CHKERRQ(ierr);
-  ierr = PetscViewerDestroy(&viewer);CHKERRQ(ierr);
 
   /*   
     Finalize the program.
   */  
-  ierr = PetscFinalize();
+  PetscFinalize();
   
   PetscFunctionReturn(0);
 
