@@ -1,21 +1,21 @@
 #PETSC_DIR  = ""
 #PETSC_ARCH = ""
 
-ALL: 4_petsc_ksp_poisson
+ALL: petsc_ksp_poisson_solution
 
 CFLAGS = -g -O2
 CPPFLAGS = 
 
-CLEANFILES = 4_petsc_ksp_poisson
+CLEANFILES = petsc_ksp_poisson_solution
 
 #include ${PETSC_HOME}/conf/variables
 #include ${PETSC_HOME}/conf/rules
 include ${PETSC_HOME}/lib/petsc/conf/variables
 include ${PETSC_HOME}/lib/petsc/conf/rules
 
-4_petsc_ksp_poisson: 4_petsc_ksp_poisson.o  chkopts
+petsc_ksp_poisson_solution: petsc_ksp_poisson_solution.o  chkopts
 	@echo "--> Linking the executable...  <--"
-	-${CLINKER} -o 4_petsc_ksp_poisson 4_petsc_ksp_poisson.o  ${PETSC_KSP_LIB}
-	${RM} 4_petsc_ksp_poisson.o
+	-${CLINKER} -o petsc_ksp_poisson_solution petsc_ksp_poisson_solution.o  ${PETSC_KSP_LIB}
+	${RM} petsc_ksp_poisson_solution.o
 	@echo "-->...done.  <--"
 

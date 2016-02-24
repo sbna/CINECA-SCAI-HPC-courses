@@ -1,20 +1,20 @@
 #PETSC_DIR  = ""
 #PETSC_ARCH = ""
 
-ALL: 2_petsc_vec
+ALL: petsc_vec_solution
 
 CFLAGS = -g -O2
 CPPFLAGS = 
 
-CLEANFILES = 2_petsc_vec
+CLEANFILES = petsc_vec_solution
 
 #include ${PETSC_HOME}/conf/variables
 #include ${PETSC_HOME}/conf/rules
 include ${PETSC_HOME}/lib/petsc/conf/variables
 include ${PETSC_HOME}/lib/petsc/conf/rules
 
-2_petsc_vec: 2_petsc_vec.o  chkopts
+petsc_vec_solution: petsc_vec_solution.o  chkopts
 	@echo "--> Linking the executable...  <--"
-	-${CLINKER} -o 2_petsc_vec 2_petsc_vec.o  ${PETSC_KSP_LIB}
-	${RM} 2_petsc_vec.o
+	-${CLINKER} -o petsc_vec_solution petsc_vec_solution.o  ${PETSC_KSP_LIB}
+	${RM} petsc_vec_solution.o
 	@echo "-->...done.  <--"

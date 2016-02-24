@@ -9,7 +9,7 @@ CONFIGURE_FILE(
 )
 
 # Build the executable
-ADD_EXECUTABLE(petsc_hello_solution        ${PROJECT_SOURCE_DIR}/1_petsc_hello.c)
+ADD_EXECUTABLE(petsc_hello_solution  ${PROJECT_SOURCE_DIR}/petsc_hello.c)
 
 # Link the executable to the petsc and mpi libs
-TARGET_LINK_LIBRARIES(petsc_hello_solution        ${PETSC_LIBRARIES} ${MPI_EXTRA_LIBRARY})
+TARGET_LINK_LIBRARIES(petsc_hello_solution  ${PETSC_LIBRARIES} ${MPI_EXTRA_LIBRARY})
