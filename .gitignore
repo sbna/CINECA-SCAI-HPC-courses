@@ -27,7 +27,16 @@
 *.i*86
 *.x86_64
 *.hex
-
+hpc-numerical-libraries-course/petsc/1_petsc_hello/guided_example/petsc_hello
+hpc-numerical-libraries-course/petsc/1_petsc_hello/solution_example/petsc_hello
+hpc-numerical-libraries-course/petsc/2_petsc_vec/guided_example/petsc_vec
+hpc-numerical-libraries-course/petsc/2_petsc_vec/solution_example/petsc_vec
+hpc-numerical-libraries-course/petsc/3_petsc_mat/guided_example/petsc_mat
+hpc-numerical-libraries-course/petsc/3_petsc_mat/solution_example/petsc_mat
+hpc-numerical-libraries-course/petsc/4_petsc_ksp_poisson/guided_example/petsc_ksp_poisson
+hpc-numerical-libraries-course/petsc/4_petsc_ksp_poisson/solution_example/petsc_ksp_poisson
+hpc-numerical-libraries-course/petsc/5_petsc_snes_poisson/guided_example/petsc_snes_poisson
+hpc-numerical-libraries-course/petsc/5_petsc_snes_poisson/solution_example/petsc_snes_poisson
 
 # Debug files
 *.dSYM/
