@@ -5,8 +5,10 @@ static const char help[] = "Solution of -Laplacian u = b using KSP and DMDA.\n\n
 #include <petscksp.h>  
 
 PetscErrorCode ComputeManufacturedSolution(DM dm, Vec* sol); 
-PetscErrorCode AssemblyRhs(DM dm, Vec* b); 
-PetscErrorCode AssemblyMatrix(DM dm, Mat* A); 
+PetscErrorCode RhsAssembly(DM dm, Vec* b); 
+PetscErrorCode FDLaplaceOperatorDiscretize(DM dm, Mat* A); 
+double f(const double x, const double y);
+double u(const double x, const double y);
 
 #undef __FUNCT__
 #define __FUNCT__ "main"
@@ -52,10 +54,30 @@ int main(int argc,char **argv)
 
 
 /* 
-  Assembly the Matrix corresponding to the finite
+  Evaluate the f function
+  f= -32*(x*(x-1) + y*(y-1))
+*/
+double f(const double x, const double y) {
+  double f_x = -32.*(x*(x-1.) + y*(y-1.));
+  return f_x;
+}
+
+
+/* 
+  Evaluate the sol function
+  sol u = 16 * x * (x - 1) * y * (y - 1) 
+*/
+double u(const double x, const double y) {
+  double sol =  16.*x*(x-1.)*y*(y-1.);
+  return sol;
+}
+
+
+/* 
+  Assemble the Matrix corresponding to the finite
   difference discretization of the Laplacian operator. 
 */
-PetscErrorCode AssemblyMatrix(DM dm, Mat* A)
+PetscErrorCode FDLaplaceOperatorDiscretize(DM dm, Mat* A)
 {
   PetscInt       i,j,nrows = 0;
   MatStencil     col[5],row,*rows;
@@ -125,13 +147,15 @@ PetscErrorCode AssemblyMatrix(DM dm, Mat* A)
 /* 
   Assembly the Rhs with Dirichlet bdc.
 */
-PetscErrorCode AssemblyRhs(DM dm, Vec* b) 
+PetscErrorCode RhsAssembly(DM dm, Vec* b) 
 {
   DMDALocalInfo  info;
   PetscErrorCode ierr;
   PetscScalar hx,hy;
   PetscInt i,j;  
-  
+  PetscScalar f_x;
+  double x, y;
+
   ierr  = DMDAGetLocalInfo(dm,&info); CHKERRQ(ierr);
 
   hx    = 1.0/(PetscReal)(info.mx-1);
@@ -145,8 +169,10 @@ PetscErrorCode AssemblyRhs(DM dm, Vec* b)
         VecSetValue(*b, j+info.my*i, 0., INSERT_VALUES);
       }
       else {
-        PetscScalar f = -32.*( hx*i*(hx*i - 1.) + hy*j*(hy*j - 1.) )*hx*hy;
-        VecSetValue(*b, j+info.my*i, f, INSERT_VALUES);
+        x = (double)(hx*i);
+        y = (double)(hy*j);
+        f_x = f(x,y)*hx*hy;
+        VecSetValue(*b, j+info.my*i, f_x, INSERT_VALUES);
       }
     }
   }
@@ -166,7 +192,9 @@ PetscErrorCode ComputeManufacturedSolution(DM dm, Vec* sol)
   DMDALocalInfo  info;
   PetscErrorCode ierr;
   PetscScalar hx,hy;
-  PetscInt i,j;  
+  PetscInt i,j;
+  double x, y;
+  PetscScalar val; 
 
   ierr  = DMDAGetLocalInfo(dm,&info); CHKERRQ(ierr);
 
@@ -174,9 +202,11 @@ PetscErrorCode ComputeManufacturedSolution(DM dm, Vec* sol)
   hy    = 1.0/(PetscReal)(info.my-1);
 
   for (j=info.ys; j<info.ys+info.ym; j++) {
-    for (i=info.xs; i<info.xs+info.xm; i++) {     
-        PetscScalar f = 16.*(hx*i)*(hx*i - 1.)*(hy*j)*(hy*j - 1.);
-        VecSetValue(*sol, j+info.my*i, f, INSERT_VALUES);
+    for (i=info.xs; i<info.xs+info.xm; i++) { 
+        x = (double)(hx*i);
+        y = (double)(hy*j);    
+        val = u(x, y);
+        VecSetValue(*sol, j+info.my*i, val, INSERT_VALUES);
     }
   }
 

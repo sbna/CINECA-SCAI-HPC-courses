@@ -4,6 +4,17 @@
  * @date 19 Feb 2016
  * @brief File containing the example of the solution in parallel 
  * of a Poisson problem using SNES and DMDA.
+ *
+ *     -nabla^2 u = -32*(x*(x-1) + y*(y-1)) in a box domain [0,1][0,1]
+ *   
+ *   with the following boundary conditions
+ *     
+ *      u = 0 in x=0, x=1, y=0 and y=1    
+ *
+ *   The solution is:
+ *     
+ *       u = 16 * x * (x - 1) * y * (y - 1) 
+ *
  * source loadPetscEnv.sh 
  * make
  * qsub petscSubmissionScript
@@ -126,7 +137,7 @@ int main(int argc,char **argv)
   /*
     Print the mesh and solution in vtk format
   */
-  PetscViewerASCIIOpen(PETSC_COMM_WORLD, "output_2.vts", &viewer);
+  PetscViewerASCIIOpen(PETSC_COMM_WORLD, "output.vts", &viewer);
   PetscViewerSetFormat(viewer, PETSC_VIEWER_ASCII_VTK);
   ierr= DMView(da,viewer);CHKERRQ(ierr);
   ierr= VecView(x,viewer);CHKERRQ(ierr);
