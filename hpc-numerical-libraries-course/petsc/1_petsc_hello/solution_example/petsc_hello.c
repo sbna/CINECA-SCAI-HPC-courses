@@ -3,9 +3,9 @@
  * @author Simone Bnà
  * @date 19 Feb 2016
  * @brief File containing the basic example of petsc usage.
- * source loadPetscEnv.sh 
+ * source petsc_load_env.sh
  * make
- * qsub petscSubmissionScript
+ * qsub petsc_qsub_script.sh
  */
 
 static const char help[] = "Petsc Hello World.\n\n";

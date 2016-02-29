@@ -3,9 +3,9 @@
  * @author Simone Bnà
  * @date 19 Feb 2016
  * @brief File containing the basic example of petsc vec usage.
- * source loadPetscEnv.sh 
+ * source petsc_load_env.sh
  * make
- * qsub petscSubmissionScript
+ * qsub petsc_qsub_script.sh
  */
 
 static const char help[] = "Petsc vec example.\n\n";
@@ -19,7 +19,7 @@ int main(int argc,char **argv)
 
   PetscMPIInt    rank;
   PetscInt       i,istart,iend,n = 6,size_local, size_global;
-  PetscScalar    v, *avec;
+  PetscScalar    *avec;
   Vec            x;
 
   /* Initialize the Petsc environment */

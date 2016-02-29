@@ -15,9 +15,9 @@
  *     
  *       u = 16 * x * (x - 1) * y * (y - 1) 
  *
- * source loadPetscEnv.sh 
+ * source petsc_load_env.sh
  * make
- * qsub petscSubmissionScript
+ * qsub petsc_qsub_script.sh
  */
 
 static const char help[] = "-Laplacian u = b as a nonlinear problem.\n\n";
@@ -81,6 +81,7 @@ static const char help[] = "-Laplacian u = b as a nonlinear problem.\n\n";
 extern PetscErrorCode FormMatrix(DM,Mat);
 extern PetscErrorCode MyComputeFunction(SNES,Vec,Vec,void*);
 extern PetscErrorCode MyComputeJacobian(SNES,Vec,Mat,Mat,void*);
+double f(const double x, const double y);
 
 #undef __FUNCT__
 #define __FUNCT__ "main"
@@ -157,7 +158,16 @@ int main(int argc,char **argv)
   PetscFunctionReturn(0);
 }
 
-/* ------------------------------------------------------------------- */
+/* 
+  Evaluate the f function
+  f= -32*(x*(x-1) + y*(y-1))
+*/
+double f(const double x, const double y) {
+  double f_x = -32.*(x*(x-1.) + y*(y-1.));
+  return f_x;
+}
+
+
 #undef __FUNCT__
 #define __FUNCT__ "MyComputeFunction"
 PetscErrorCode MyComputeFunction(SNES snes,Vec x,Vec F,void *ctx)
@@ -168,6 +178,8 @@ PetscErrorCode MyComputeFunction(SNES snes,Vec x,Vec F,void *ctx)
   PetscScalar hx,hy;
   PetscInt i,j;
   PetscErrorCode ierr;
+  PetscScalar val;
+  double xx, xy;
 
   PetscFunctionBeginUser;
   ierr = SNESGetDM(snes,&dm);CHKERRQ(ierr);
@@ -192,8 +204,10 @@ PetscErrorCode MyComputeFunction(SNES snes,Vec x,Vec F,void *ctx)
         VecSetValue(F, j+info.my*i, 0., ADD_VALUES);
       }
       else {
-        PetscScalar f = 32.*( hx*i*(hx*i - 1.) + hy*j*(hy*j - 1.) )*hx*hy;
-        VecSetValue(F, j+info.my*i, f, ADD_VALUES);
+        xx = (double)(hx*i);
+        xy = (double)(hx*j);
+        val = -1.*f(xx, xy)*hx*hy;
+        VecSetValue(F, j+info.my*i, val, ADD_VALUES);
       }
     }
   }

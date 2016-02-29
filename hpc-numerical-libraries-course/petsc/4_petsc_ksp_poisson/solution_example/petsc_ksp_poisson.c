@@ -15,9 +15,9 @@
  *     
  *       u = 16 * x * (x - 1) * y * (y - 1) 
  *
- * source loadPetscEnv.sh 
+ * source petsc_load_env.sh
  * make
- * qsub petscSubmissionScript
+ * qsub petsc_qsub_script.sh
  */
 
 static const char help[] = "Solution of -Laplacian u = b using KSP and DMDA.\n\n";

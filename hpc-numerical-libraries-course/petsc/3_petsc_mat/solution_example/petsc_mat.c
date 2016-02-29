@@ -3,9 +3,9 @@
  * @author Simone Bnà
  * @date 19 Feb 2016
  * @brief File containing the basic example of petsc mat usage.
- * source loadPetscEnv.sh 
+ * source petsc_load_env.sh
  * make
- * qsub petscSubmissionScript
+ * qsub petsc_qsub_script.sh
  */
 
 static const char help[] = "Petsc mat example.\n\n";
@@ -17,7 +17,6 @@ static const char help[] = "Petsc mat example.\n\n";
 int main(int argc,char **argv)
 {
 
-   PetscErrorCode ierr;
    PetscMPIInt    rank;
    PetscMPIInt    nprocs;
    Mat            A;        
