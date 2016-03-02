@@ -90,7 +90,6 @@ int main(int argc,char **argv)
   SNES           snes;        /* nonlinear solver */
   Vec            x,b;         /* solution vector */
   PetscInt       its;         /* iterations for convergence */
-  PetscErrorCode ierr;
   DM             da;
   PetscViewer    viewer;
 
@@ -102,58 +101,58 @@ int main(int argc,char **argv)
   /*
     Create distributed array (DMDA) to manage parallel grid and vectors
   */
-  ierr = DMDACreate2d(PETSC_COMM_WORLD, DM_BOUNDARY_NONE, DM_BOUNDARY_NONE,\
-                      DMDA_STENCIL_STAR,-4,-4,PETSC_DECIDE,PETSC_DECIDE,1,1,\
-                      NULL,NULL,&da);CHKERRQ(ierr);
-  ierr = DMDASetUniformCoordinates(da, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0);CHKERRQ(ierr);
+  DMDACreate2d(PETSC_COMM_WORLD, DM_BOUNDARY_NONE, DM_BOUNDARY_NONE,\
+               DMDA_STENCIL_STAR,-4,-4,PETSC_DECIDE,PETSC_DECIDE,1,1,\
+               NULL,NULL,&da);
+  DMDASetUniformCoordinates(da, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
 
   /*
     Extract global vectors from DMDA; then duplicate for remaining
     vectors that are the same types
   */
-  ierr = DMCreateGlobalVector(da,&x);CHKERRQ(ierr);
-  ierr = DMCreateGlobalVector(da,&b);CHKERRQ(ierr);
-  ierr = VecSet(b,0.);CHKERRQ(ierr);
+  DMCreateGlobalVector(da,&x);
+  DMCreateGlobalVector(da,&b);
+  VecSet(b,0.);
 
   /* 
     Create nonlinear solver context (mesh, compute rhs and jacobian functions)
   */
-  ierr = SNESCreate(PETSC_COMM_WORLD,&snes);CHKERRQ(ierr);
+  SNESCreate(PETSC_COMM_WORLD,&snes);
 
-  ierr = SNESSetDM(snes,da);CHKERRQ(ierr);
-  ierr = SNESSetFunction(snes,NULL,MyComputeFunction,NULL);CHKERRQ(ierr);
-  ierr = SNESSetJacobian(snes,NULL,NULL,MyComputeJacobian,NULL);CHKERRQ(ierr);
+  SNESSetDM(snes,da);
+  SNESSetFunction(snes,NULL,MyComputeFunction,NULL);
+  SNESSetJacobian(snes,NULL,NULL,MyComputeJacobian,NULL);
 
   /*
     Customize nonlinear solver; set runtime options
   */
-  ierr = SNESSetFromOptions(snes);CHKERRQ(ierr);
+  SNESSetFromOptions(snes);
 
   /*
     Solve nonlinear system
   */
-  ierr = SNESSolve(snes,b,x);CHKERRQ(ierr);
-  ierr = SNESGetIterationNumber(snes,&its);CHKERRQ(ierr);
+  SNESSolve(snes,b,x);
+  SNESGetIterationNumber(snes,&its);
 
   /*
     Print the mesh and solution in vtk format
   */
   PetscViewerASCIIOpen(PETSC_COMM_WORLD, "output.vts", &viewer);
   PetscViewerSetFormat(viewer, PETSC_VIEWER_ASCII_VTK);
-  ierr= DMView(da,viewer);CHKERRQ(ierr);
-  ierr= VecView(x,viewer);CHKERRQ(ierr);
+  DMView(da,viewer);
+  VecView(x,viewer);
 
   /*
      Free work space.  All PETSc objects should be destroyed when they
      are no longer needed.
   
   */
-  ierr = VecDestroy(&x);CHKERRQ(ierr);
-  ierr = VecDestroy(&b);CHKERRQ(ierr);
-  ierr = SNESDestroy(&snes);CHKERRQ(ierr);
-  ierr = DMDestroy(&da);CHKERRQ(ierr);
-  ierr = PetscViewerDestroy(&viewer);CHKERRQ(ierr);
-  ierr = PetscFinalize();
+  VecDestroy(&x);
+  VecDestroy(&b);
+  SNESDestroy(&snes);
+  DMDestroy(&da);
+  PetscViewerDestroy(&viewer);
+  PetscFinalize();
   
   PetscFunctionReturn(0);
 }
@@ -162,6 +161,8 @@ int main(int argc,char **argv)
   Evaluate the f function
   f= -32*(x*(x-1) + y*(y-1))
 */
+#undef __FUNCT__
+#define __FUNCT__ "f"
 double f(const double x, const double y) {
   double f_x = -32.*(x*(x-1.) + y*(y-1.));
   return f_x;
@@ -177,24 +178,23 @@ PetscErrorCode MyComputeFunction(SNES snes,Vec x,Vec F,void *ctx)
   Mat J;
   PetscScalar hx,hy;
   PetscInt i,j;
-  PetscErrorCode ierr;
   PetscScalar val;
   double xx, xy;
 
   PetscFunctionBeginUser;
-  ierr = SNESGetDM(snes,&dm);CHKERRQ(ierr);
-  ierr = DMGetApplicationContext(dm,&J);CHKERRQ(ierr);
+  SNESGetDM(snes,&dm);
+  DMGetApplicationContext(dm,&J);
   if (!J) {
-    ierr = DMSetMatType(dm,MATAIJ);CHKERRQ(ierr);
-    ierr = DMCreateMatrix(dm,&J);CHKERRQ(ierr);
-    ierr = MatSetDM(J, NULL);CHKERRQ(ierr);
-    ierr = FormMatrix(dm,J);CHKERRQ(ierr);
-    ierr = DMSetApplicationContext(dm,J);CHKERRQ(ierr);
-    ierr = DMSetApplicationContextDestroy(dm,(PetscErrorCode (*)(void**))MatDestroy);CHKERRQ(ierr);
+    DMSetMatType(dm,MATAIJ);
+    DMCreateMatrix(dm,&J);
+    MatSetDM(J, NULL);
+    FormMatrix(dm,J);
+    DMSetApplicationContext(dm,J);
+    DMSetApplicationContextDestroy(dm,(PetscErrorCode (*)(void**))MatDestroy);
   }
-  ierr = MatMult(J,x,F);CHKERRQ(ierr);
+  MatMult(J,x,F);
 
-  ierr  = DMDAGetLocalInfo(dm,&info); CHKERRQ(ierr);
+  DMDAGetLocalInfo(dm,&info);
   hx    = 1.0/(PetscReal)(info.mx-1);
   hy    = 1.0/(PetscReal)(info.my-1);
 
@@ -222,12 +222,11 @@ PetscErrorCode MyComputeFunction(SNES snes,Vec x,Vec F,void *ctx)
 #define __FUNCT__ "MyComputeJacobian"
 PetscErrorCode MyComputeJacobian(SNES snes,Vec x,Mat J,Mat Jp,void *ctx)
 {
-  PetscErrorCode ierr;
   DM             dm;
 
   PetscFunctionBeginUser;
-  ierr = SNESGetDM(snes,&dm);CHKERRQ(ierr);
-  ierr = FormMatrix(dm,Jp);CHKERRQ(ierr);
+  SNESGetDM(snes,&dm);
+  FormMatrix(dm,Jp);
   PetscFunctionReturn(0);
 }
 
@@ -235,20 +234,19 @@ PetscErrorCode MyComputeJacobian(SNES snes,Vec x,Mat J,Mat Jp,void *ctx)
 #define __FUNCT__ "FormMatrix"
 PetscErrorCode FormMatrix(DM da,Mat jac)
 {
-  PetscErrorCode ierr;
   PetscInt       i,j,nrows = 0;
   MatStencil     col[5],row,*rows;
   PetscScalar    v[5],hx,hy,hxdhy,hydhx;
   DMDALocalInfo  info;
 
   PetscFunctionBeginUser;
-  ierr  = DMDAGetLocalInfo(da,&info);CHKERRQ(ierr);
+  DMDAGetLocalInfo(da,&info);
   hx    = 1.0/(PetscReal)(info.mx-1);
   hy    = 1.0/(PetscReal)(info.my-1);
   hxdhy = hx/hy;
   hydhx = hy/hx;
 
-  ierr = PetscMalloc1(info.ym*info.xm,&rows);CHKERRQ(ierr);
+  PetscMalloc1(info.ym*info.xm,&rows);
   /*
      Compute entries for the locally owned part of the Jacobian.
       - Currently, all PETSc parallel matrix formats are partitioned by
@@ -266,7 +264,7 @@ PetscErrorCode FormMatrix(DM da,Mat jac)
       /* boundary points */
       if (i == 0 || j == 0 || i == info.mx-1 || j == info.my-1) {
         v[0]            = 2.0*(hydhx + hxdhy);
-        ierr            = MatSetValuesStencil(jac,1,&row,1,&row,v,INSERT_VALUES);CHKERRQ(ierr);
+        MatSetValuesStencil(jac,1,&row,1,&row,v,INSERT_VALUES);
         rows[nrows].i   = i;
         rows[nrows++].j = j;
       } else {
@@ -276,7 +274,7 @@ PetscErrorCode FormMatrix(DM da,Mat jac)
         v[2] = 2.0*(hydhx + hxdhy);                              col[2].j = row.j; col[2].i = row.i;
         v[3] = -hydhx;                                           col[3].j = j;     col[3].i = i+1;
         v[4] = -hxdhy;                                           col[4].j = j + 1; col[4].i = i;
-        ierr = MatSetValuesStencil(jac,1,&row,5,col,v,INSERT_VALUES);CHKERRQ(ierr);
+        MatSetValuesStencil(jac,1,&row,5,col,v,INSERT_VALUES);
       }
     }
   }
@@ -285,16 +283,16 @@ PetscErrorCode FormMatrix(DM da,Mat jac)
      Assemble matrix, using the 2-step process:
        MatAssemblyBegin(), MatAssemblyEnd().
   */
-  ierr = MatAssemblyBegin(jac,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatAssemblyEnd(jac,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatZeroRowsColumnsStencil(jac,nrows,rows,2.0*(hydhx + hxdhy),NULL,NULL);CHKERRQ(ierr);
-  ierr = PetscFree(rows);CHKERRQ(ierr);
+  MatAssemblyBegin(jac,MAT_FINAL_ASSEMBLY);
+  MatAssemblyEnd(jac,MAT_FINAL_ASSEMBLY);
+  MatZeroRowsColumnsStencil(jac,nrows,rows,2.0*(hydhx + hxdhy),NULL,NULL);
+  PetscFree(rows);
 
   /*
      Tell the matrix we will never add a new nonzero location to the
      matrix. If we do, it will generate an error.
   */
-  ierr = MatSetOption(jac,MAT_NEW_NONZERO_LOCATION_ERR,PETSC_TRUE);CHKERRQ(ierr);
+  MatSetOption(jac,MAT_NEW_NONZERO_LOCATION_ERR,PETSC_TRUE);
   
   PetscFunctionReturn(0);
 }

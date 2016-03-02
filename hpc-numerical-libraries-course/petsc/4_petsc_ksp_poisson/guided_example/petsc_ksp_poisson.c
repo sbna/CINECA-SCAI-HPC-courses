@@ -49,7 +49,6 @@ int main(int argc,char **argv)
   PetscFinalize();
   
   PetscFunctionReturn(0);
-
 }
 
 
@@ -57,6 +56,8 @@ int main(int argc,char **argv)
   Evaluate the f function
   f= -32*(x*(x-1) + y*(y-1))
 */
+#undef __FUNCT__
+#define __FUNCT__ "f"
 double f(const double x, const double y) {
   double f_x = -32.*(x*(x-1.) + y*(y-1.));
   return f_x;
@@ -67,6 +68,8 @@ double f(const double x, const double y) {
   Evaluate the sol function
   sol u = 16 * x * (x - 1) * y * (y - 1) 
 */
+#undef __FUNCT__
+#define __FUNCT__ "u"
 double u(const double x, const double y) {
   double sol =  16.*x*(x-1.)*y*(y-1.);
   return sol;
@@ -77,22 +80,23 @@ double u(const double x, const double y) {
   Assemble the Matrix corresponding to the finite
   difference discretization of the Laplacian operator. 
 */
+#undef __FUNCT__
+#define __FUNCT__ "FDLaplaceOperatorDiscretize"
 PetscErrorCode FDLaplaceOperatorDiscretize(DM dm, Mat* A)
 {
   PetscInt       i,j,nrows = 0;
   MatStencil     col[5],row,*rows;
   PetscScalar    v[5],hx,hy,hxdhy,hydhx;
   DMDALocalInfo  info;
-  PetscErrorCode ierr;
   
-  ierr  = DMDAGetLocalInfo(dm,&info);CHKERRQ(ierr);
+  DMDAGetLocalInfo(dm,&info);
 
   hx    = 1.0/(PetscReal)(info.mx-1);
   hy    = 1.0/(PetscReal)(info.my-1);
   hxdhy = hx/hy;
   hydhx = hy/hx;
 
-  ierr = PetscMalloc1(info.ym*info.xm,&rows);CHKERRQ(ierr);
+  PetscMalloc1(info.ym*info.xm,&rows);
   /*
      Compute entries for the locally owned part of the Jacobian.
       - Currently, all PETSc parallel matrix formats are partitioned by
@@ -110,7 +114,7 @@ PetscErrorCode FDLaplaceOperatorDiscretize(DM dm, Mat* A)
       /* boundary points */
       if (i == 0 || j == 0 || i == info.mx-1 || j == info.my-1) {
         v[0]            = 2.0*(hydhx + hxdhy);
-        ierr            = MatSetValuesStencil(*A,1,&row,1,&row,v,INSERT_VALUES);CHKERRQ(ierr);
+        MatSetValuesStencil(*A,1,&row,1,&row,v,INSERT_VALUES);
         rows[nrows].i   = i;
         rows[nrows++].j = j;
       } else {
@@ -120,7 +124,7 @@ PetscErrorCode FDLaplaceOperatorDiscretize(DM dm, Mat* A)
         v[2] = 2.0*(hydhx + hxdhy);                              col[2].j = row.j; col[2].i = row.i;
         v[3] = -hydhx;                                           col[3].j = j;     col[3].i = i+1;
         v[4] = -hxdhy;                                           col[4].j = j + 1; col[4].i = i;
-        ierr = MatSetValuesStencil(*A,1,&row,5,col,v,INSERT_VALUES);CHKERRQ(ierr);
+        MatSetValuesStencil(*A,1,&row,5,col,v,INSERT_VALUES);
       }
     }
   }
@@ -129,34 +133,35 @@ PetscErrorCode FDLaplaceOperatorDiscretize(DM dm, Mat* A)
      Assemble matrix, using the 2-step process:
        MatAssemblyBegin(), MatAssemblyEnd().
   */
-  ierr = MatAssemblyBegin(*A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatAssemblyEnd(*A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatZeroRowsColumnsStencil(*A,nrows,rows,2.0*(hydhx + hxdhy),NULL,NULL);CHKERRQ(ierr);
-  ierr = PetscFree(rows);CHKERRQ(ierr);
+  MatAssemblyBegin(*A,MAT_FINAL_ASSEMBLY);
+  MatAssemblyEnd(*A,MAT_FINAL_ASSEMBLY);
+  MatZeroRowsColumnsStencil(*A,nrows,rows,2.0*(hydhx + hxdhy),NULL,NULL);
+  PetscFree(rows);
 
   /*
      Tell the matrix we will never add a new nonzero location to the
      matrix. If we do, it will generate an error.
   */
-  ierr = MatSetOption(*A,MAT_NEW_NONZERO_LOCATION_ERR,PETSC_TRUE);CHKERRQ(ierr);
+  MatSetOption(*A,MAT_NEW_NONZERO_LOCATION_ERR,PETSC_TRUE);
 
-  return 0;
+  PetscFunctionReturn(0);
 }
 
 
 /* 
   Assembly the Rhs with Dirichlet bdc.
 */
+#undef __FUNCT__
+#define __FUNCT__ "RhsAssembly"
 PetscErrorCode RhsAssembly(DM dm, Vec* b) 
 {
   DMDALocalInfo  info;
-  PetscErrorCode ierr;
   PetscScalar hx,hy;
   PetscInt i,j;  
   PetscScalar f_x;
   double x, y;
 
-  ierr  = DMDAGetLocalInfo(dm,&info); CHKERRQ(ierr);
+  DMDAGetLocalInfo(dm,&info);
 
   hx    = 1.0/(PetscReal)(info.mx-1);
   hy    = 1.0/(PetscReal)(info.my-1);
@@ -180,23 +185,24 @@ PetscErrorCode RhsAssembly(DM dm, Vec* b)
   VecAssemblyBegin(*b);
   VecAssemblyEnd(*b);
 
-  return 0;
+  PetscFunctionReturn(0);
 }
 
 
 /* 
   Compute the manufactured solution.
 */
+#undef __FUNCT__
+#define __FUNCT__ "ComputeManufacturedSolution"
 PetscErrorCode ComputeManufacturedSolution(DM dm, Vec* sol) 
 {
   DMDALocalInfo  info;
-  PetscErrorCode ierr;
   PetscScalar hx,hy;
   PetscInt i,j;
   double x, y;
   PetscScalar val; 
 
-  ierr  = DMDAGetLocalInfo(dm,&info); CHKERRQ(ierr);
+  DMDAGetLocalInfo(dm,&info);
 
   hx    = 1.0/(PetscReal)(info.mx-1);
   hy    = 1.0/(PetscReal)(info.my-1);
@@ -213,5 +219,5 @@ PetscErrorCode ComputeManufacturedSolution(DM dm, Vec* sol)
   VecAssemblyBegin(*sol);
   VecAssemblyEnd(*sol);
 
-  return 0;
+  PetscFunctionReturn(0);
 }

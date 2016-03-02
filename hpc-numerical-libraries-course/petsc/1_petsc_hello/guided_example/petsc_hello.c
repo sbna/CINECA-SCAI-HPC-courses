@@ -1,4 +1,4 @@
-static const char help[] = "Petsc Hello World.\n\n";
+static const char help[] = "Petsc Hello World example.\n\n";
 
 #include <petscsys.h>
 

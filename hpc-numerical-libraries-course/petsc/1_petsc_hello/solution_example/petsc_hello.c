@@ -8,7 +8,7 @@
  * qsub petsc_qsub_script.sh
  */
 
-static const char help[] = "Petsc Hello World.\n\n";
+static const char help[] = "Petsc Hello World example.\n\n";
 
 #include <petscsys.h>
 
@@ -17,7 +17,6 @@ static const char help[] = "Petsc Hello World.\n\n";
 int main(int argc,char **argv)
 {
 
-   PetscErrorCode ierr;
    PetscMPIInt    rank, size;
 
    /*
@@ -56,7 +55,7 @@ int main(int argc,char **argv)
      (where each process is considered separately).  Thus, this time the
      output from different processes does not appear in any particular order.
    */
-   ierr = PetscPrintf(PETSC_COMM_SELF,"Hello by proc %d!\n", rank);CHKERRQ(ierr);
+   PetscPrintf(PETSC_COMM_SELF,"Hello by proc %d!\n", rank);
 
    /*
      Always call PetscFinalize() before exiting a program.  This routine
@@ -65,7 +64,7 @@ int main(int argc,char **argv)
          options are chosen (e.g., -log_summary).
      See the PetscFinalize() manpage for more information.
    */
-   ierr = PetscFinalize(); CHKERRQ(ierr);
+   PetscFinalize();
 
    PetscFunctionReturn(0);
 

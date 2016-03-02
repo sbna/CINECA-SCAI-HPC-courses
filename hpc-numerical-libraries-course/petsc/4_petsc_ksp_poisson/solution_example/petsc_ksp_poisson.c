@@ -44,7 +44,6 @@ int main(int argc,char **argv)
   DM             da;              /* DMDA object containing the structured mesh */
   PetscViewer    viewer; 
   PetscReal norm_sol, norm_diff;
-  PetscErrorCode ierr;
 
   /* 
     Initialize program
@@ -64,19 +63,19 @@ int main(int argc,char **argv)
     The default case is 4 nodes in x and y direction
     We use a star stencil for the finite difference discretization of the Laplacian operator. 
   */
-  ierr = DMDACreate2d(PETSC_COMM_WORLD, DM_BOUNDARY_NONE,  \
-                      DM_BOUNDARY_NONE,DMDA_STENCIL_STAR,-4,-4,PETSC_DECIDE,PETSC_DECIDE,  \
-                      1,1,NULL,NULL,&da);CHKERRQ(ierr); 
-  ierr = DMDASetUniformCoordinates(da, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0);CHKERRQ(ierr);
+  DMDACreate2d(PETSC_COMM_WORLD, DM_BOUNDARY_NONE,  \
+               DM_BOUNDARY_NONE,DMDA_STENCIL_STAR,-4,-4,PETSC_DECIDE,PETSC_DECIDE,  \
+               1,1,NULL,NULL,&da);
+  DMDASetUniformCoordinates(da, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
 
   /* 
      Extract global vectors from DMDA, one for holding the rhs, one for the solution 
      and one for the manufactured solution; then duplicate for remaining
      vectors that are the same types
   */
-  ierr = DMCreateGlobalVector(da,&x);CHKERRQ(ierr);
-  ierr = VecDuplicate(x, &sol);CHKERRQ(ierr);
-  ierr = VecDuplicate(x, &b);CHKERRQ(ierr);
+  DMCreateGlobalVector(da,&x);
+  VecDuplicate(x, &sol);
+  VecDuplicate(x, &b);
 
   /* 
     Create the matrix corresponding to the DMDA object.
@@ -87,14 +86,14 @@ int main(int argc,char **argv)
     Compute the matrix and right-hand-side vector that define
     the linear system, Ax = b.
   */
-  ierr = FDLaplaceOperatorDiscretize(da, &A);
+  FDLaplaceOperatorDiscretize(da, &A);
 
-  ierr = RhsAssembly(da, &b);CHKERRQ(ierr);
+  RhsAssembly(da, &b);
 
   /*   
     Set to 0 the solution vector (our initial guess).
   */
-  ierr = VecSet(x,0.);CHKERRQ(ierr);
+  VecSet(x,0.);
 
 
   /* 
@@ -106,13 +105,13 @@ int main(int argc,char **argv)
    /*
       Create linear solver context
    */
-   ierr = KSPCreate(PETSC_COMM_WORLD, &solver);CHKERRQ(ierr);
+   KSPCreate(PETSC_COMM_WORLD, &solver);
 
    /*
       Set the laplacian operator. Here the matrix that defines the linear system
       also serves as the preconditioning matrix.
    */
-   ierr = KSPSetOperators(solver, A, A);CHKERRQ(ierr);
+   KSPSetOperators(solver, A, A);
 
    /*
      Set runtime options, e.g.,
@@ -121,12 +120,12 @@ int main(int argc,char **argv)
      KSPSetFromOptions() is called _after_ any other customization
      routines.
    */
-   ierr = KSPSetFromOptions(solver);CHKERRQ(ierr);
+   KSPSetFromOptions(solver);
 
    /* 
      Solve the linear system
    */
-   ierr = KSPSolve(solver,b,x);CHKERRQ(ierr);
+   KSPSolve(solver,b,x);
 
 
   /* 
@@ -138,7 +137,7 @@ int main(int argc,char **argv)
   /*   
     Compute the manufactured solution.
   */
-  ierr = ComputeManufacturedSolution(da, &sol);CHKERRQ(ierr);
+  ComputeManufacturedSolution(da, &sol);
 
   /* 
     Compute the relative error of the numerical solution 
@@ -154,33 +153,32 @@ int main(int argc,char **argv)
   */
   PetscViewerASCIIOpen(PETSC_COMM_WORLD, "output.vts", &viewer);
   PetscViewerSetFormat(viewer, PETSC_VIEWER_ASCII_VTK);
-  ierr= DMView(da,viewer);CHKERRQ(ierr);
-  ierr= VecView(x,viewer);CHKERRQ(ierr);
-  ierr= VecView(b,viewer);CHKERRQ(ierr);
+  DMView(da,viewer);
+  VecView(x,viewer);
+  VecView(b,viewer);
   /* 
-    ierr = MatView(A, PETSC_VIEWER_STDOUT_WORLD);
-    ierr = VecView(b, PETSC_VIEWER_STDOUT_WORLD);
-    ierr = VecView(x, PETSC_VIEWER_STDOUT_WORLD);
+    MatView(A, PETSC_VIEWER_STDOUT_WORLD);
+    VecView(b, PETSC_VIEWER_STDOUT_WORLD);
+    VecView(x, PETSC_VIEWER_STDOUT_WORLD);
   */
 
   /*
     Free work space.  All PETSc objects should be destroyed when they
     are no longer needed.
   */
-  ierr = DMDestroy(&da);CHKERRQ(ierr);
-  ierr = VecDestroy(&x);CHKERRQ(ierr);
-  ierr = VecDestroy(&b);CHKERRQ(ierr);
-  ierr = MatDestroy(&A);CHKERRQ(ierr);
-  ierr = KSPDestroy(&solver);CHKERRQ(ierr);
-  ierr = PetscViewerDestroy(&viewer);CHKERRQ(ierr);
+  DMDestroy(&da);
+  VecDestroy(&x);
+  VecDestroy(&b);
+  MatDestroy(&A);
+  KSPDestroy(&solver);
+  PetscViewerDestroy(&viewer);
 
   /*   
     Finalize the program.
   */  
-  ierr = PetscFinalize();
+  PetscFinalize();
   
   PetscFunctionReturn(0);
-
 }
 
 
@@ -188,6 +186,8 @@ int main(int argc,char **argv)
   Evaluate the f function
   f= -32*(x*(x-1) + y*(y-1))
 */
+#undef __FUNCT__
+#define __FUNCT__ "f"
 double f(const double x, const double y) {
   double f_x = -32.*(x*(x-1.) + y*(y-1.));
   return f_x;
@@ -198,6 +198,8 @@ double f(const double x, const double y) {
   Evaluate the sol function
   sol u = 16 * x * (x - 1) * y * (y - 1) 
 */
+#undef __FUNCT__
+#define __FUNCT__ "u"
 double u(const double x, const double y) {
   double sol =  16.*x*(x-1.)*y*(y-1.);
   return sol;
@@ -208,22 +210,23 @@ double u(const double x, const double y) {
   Assemble the Matrix corresponding to the finite
   difference discretization of the Laplacian operator. 
 */
+#undef __FUNCT__
+#define __FUNCT__ "FDLaplaceOperatorDiscretize"
 PetscErrorCode FDLaplaceOperatorDiscretize(DM dm, Mat* A)
 {
   PetscInt       i,j,nrows = 0;
   MatStencil     col[5],row,*rows;
   PetscScalar    v[5],hx,hy,hxdhy,hydhx;
   DMDALocalInfo  info;
-  PetscErrorCode ierr;
   
-  ierr  = DMDAGetLocalInfo(dm,&info);CHKERRQ(ierr);
+  DMDAGetLocalInfo(dm,&info);
 
   hx    = 1.0/(PetscReal)(info.mx-1);
   hy    = 1.0/(PetscReal)(info.my-1);
   hxdhy = hx/hy;
   hydhx = hy/hx;
 
-  ierr = PetscMalloc1(info.ym*info.xm,&rows);CHKERRQ(ierr);
+  PetscMalloc1(info.ym*info.xm,&rows);
   /*
      Compute entries for the locally owned part of the Jacobian.
       - Currently, all PETSc parallel matrix formats are partitioned by
@@ -241,7 +244,7 @@ PetscErrorCode FDLaplaceOperatorDiscretize(DM dm, Mat* A)
       /* boundary points */
       if (i == 0 || j == 0 || i == info.mx-1 || j == info.my-1) {
         v[0]            = 2.0*(hydhx + hxdhy);
-        ierr            = MatSetValuesStencil(*A,1,&row,1,&row,v,INSERT_VALUES);CHKERRQ(ierr);
+        MatSetValuesStencil(*A,1,&row,1,&row,v,INSERT_VALUES);
         rows[nrows].i   = i;
         rows[nrows++].j = j;
       } else {
@@ -251,7 +254,7 @@ PetscErrorCode FDLaplaceOperatorDiscretize(DM dm, Mat* A)
         v[2] = 2.0*(hydhx + hxdhy);                              col[2].j = row.j; col[2].i = row.i;
         v[3] = -hydhx;                                           col[3].j = j;     col[3].i = i+1;
         v[4] = -hxdhy;                                           col[4].j = j + 1; col[4].i = i;
-        ierr = MatSetValuesStencil(*A,1,&row,5,col,v,INSERT_VALUES);CHKERRQ(ierr);
+        MatSetValuesStencil(*A,1,&row,5,col,v,INSERT_VALUES);
       }
     }
   }
@@ -260,34 +263,35 @@ PetscErrorCode FDLaplaceOperatorDiscretize(DM dm, Mat* A)
      Assemble matrix, using the 2-step process:
        MatAssemblyBegin(), MatAssemblyEnd().
   */
-  ierr = MatAssemblyBegin(*A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatAssemblyEnd(*A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatZeroRowsColumnsStencil(*A,nrows,rows,2.0*(hydhx + hxdhy),NULL,NULL);CHKERRQ(ierr);
-  ierr = PetscFree(rows);CHKERRQ(ierr);
+  MatAssemblyBegin(*A,MAT_FINAL_ASSEMBLY);
+  MatAssemblyEnd(*A,MAT_FINAL_ASSEMBLY);
+  MatZeroRowsColumnsStencil(*A,nrows,rows,2.0*(hydhx + hxdhy),NULL,NULL);
+  PetscFree(rows);
 
   /*
      Tell the matrix we will never add a new nonzero location to the
      matrix. If we do, it will generate an error.
   */
-  ierr = MatSetOption(*A,MAT_NEW_NONZERO_LOCATION_ERR,PETSC_TRUE);CHKERRQ(ierr);
+  MatSetOption(*A,MAT_NEW_NONZERO_LOCATION_ERR,PETSC_TRUE);
 
-  return 0;
+  PetscFunctionReturn(0);
 }
 
 
 /* 
   Assembly the Rhs with Dirichlet bdc.
 */
+#undef __FUNCT__
+#define __FUNCT__ "RhsAssembly"
 PetscErrorCode RhsAssembly(DM dm, Vec* b) 
 {
   DMDALocalInfo  info;
-  PetscErrorCode ierr;
   PetscScalar hx,hy;
   PetscInt i,j;  
   PetscScalar f_x;
   double x, y;
 
-  ierr  = DMDAGetLocalInfo(dm,&info); CHKERRQ(ierr);
+  DMDAGetLocalInfo(dm,&info);
 
   hx    = 1.0/(PetscReal)(info.mx-1);
   hy    = 1.0/(PetscReal)(info.my-1);
@@ -311,23 +315,24 @@ PetscErrorCode RhsAssembly(DM dm, Vec* b)
   VecAssemblyBegin(*b);
   VecAssemblyEnd(*b);
 
-  return 0;
+  PetscFunctionReturn(0);
 }
 
 
 /* 
   Compute the manufactured solution.
 */
+#undef __FUNCT__
+#define __FUNCT__ "ComputeManufacturedSolution"
 PetscErrorCode ComputeManufacturedSolution(DM dm, Vec* sol) 
 {
   DMDALocalInfo  info;
-  PetscErrorCode ierr;
   PetscScalar hx,hy;
   PetscInt i,j;
   double x, y;
   PetscScalar val; 
 
-  ierr  = DMDAGetLocalInfo(dm,&info); CHKERRQ(ierr);
+  DMDAGetLocalInfo(dm,&info);
 
   hx    = 1.0/(PetscReal)(info.mx-1);
   hy    = 1.0/(PetscReal)(info.my-1);
@@ -344,5 +349,5 @@ PetscErrorCode ComputeManufacturedSolution(DM dm, Vec* sol)
   VecAssemblyBegin(*sol);
   VecAssemblyEnd(*sol);
 
-  return 0;
+  PetscFunctionReturn(0);
 }
