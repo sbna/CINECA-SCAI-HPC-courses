@@ -1,7 +1,7 @@
 ## Setup
 Installation steps on GALILEO CINECA cluster
 
-**Clone the project**
+**clone the project**
 
     git clone https://github.com/sbna/CINECA-SCAI-HPC-courses.git
     
@@ -17,13 +17,12 @@ Installation steps on GALILEO CINECA cluster
     cd CINECA-SCAI-HPC-courses-bin
     cmake ../CINECA-SCAI-HPC-courses/hpc-numerical-libraries-course
     
-**conpile the project**
+**compile the project**
 
     make
 
 ## Run an example
-Open the petsc_qsub_script.sh script and change the last line of the script to run the desired example with
-custom flags
+Open the petsc_qsub_script.sh script located in one of the example folders and change the last line of the script to run the desired example with custom flags
 
-    cd petsc
+    cd petsc/X_petsc_xxx/solution_example
     qsub petsc_qsub_script.sh
