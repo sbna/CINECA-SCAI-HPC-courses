@@ -5,7 +5,6 @@
 #PBS -e job.err
 #PBS -A cin_staff
 
-PBS_O_WORKDIR=""
 cd ${PBS_O_WORKDIR} 
 
 echo ${PBS_O_WORKDIR}
