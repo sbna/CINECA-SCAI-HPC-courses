@@ -11,3 +11,4 @@ ADD_SUBDIRECTORY(2_petsc_vec)
 ADD_SUBDIRECTORY(3_petsc_mat)
 ADD_SUBDIRECTORY(4_petsc_ksp_poisson)
 ADD_SUBDIRECTORY(5_petsc_snes_poisson)
+

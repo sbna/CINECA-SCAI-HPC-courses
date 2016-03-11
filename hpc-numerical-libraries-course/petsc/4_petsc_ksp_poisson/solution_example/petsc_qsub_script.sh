@@ -20,4 +20,4 @@ module load intel/pe-xe-2016--binary
 module load intelmpi/5.1.1--binary
 module load petsc/3.6.3--intelmpi--5.1.1--binary
 
-mpirun -np 2 ./petsc_ksp_poisson -da_grid_x 64 -da_grid_y 64 -ksp_monitor_true_residual -ksp_view
+mpirun -np 2 ./petsc_ksp_poisson_solution -da_grid_x 64 -da_grid_y 64 -ksp_monitor_true_residual -ksp_view

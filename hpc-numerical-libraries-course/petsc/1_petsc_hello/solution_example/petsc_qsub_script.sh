@@ -20,4 +20,4 @@ module load intel/pe-xe-2016--binary
 module load intelmpi/5.1.1--binary
 module load petsc/3.6.3--intelmpi--5.1.1--binary
 
-mpirun -np 2 ./petsc_hello
+mpirun -np 2 ./petsc_hello_solution
