@@ -8,7 +8,7 @@ Installation steps on GALILEO CINECA cluster
 **load the environment**
 
     cd CINECA-SCAI-HPC-courses/hpc-numerical-libraries-course/petsc/
-    bash petsc_load_env.sh    
+    source petsc_load_env.sh    
 
 **configure the project**
 
